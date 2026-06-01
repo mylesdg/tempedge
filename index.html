@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TempEdge Pro</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--card:#fff;--card2:#f8fafd;--border:#e4e7ef;
+  --text:#0f1623;--text2:#4b5568;--text3:#9aa3b0;
+  --blue:#1d6ef5;--blue-l:#eef4ff;--blue-d:#1558d6;
+  --green:#0a9b5e;--green-l:#edfaf4;
+  --red:#d42b24;--red-l:#fff0ef;
+  --amber:#b85c0a;--amber-l:#fff8ed;
+  --purple:#6940c5;--purple-l:#f4f2ff;
+  --orange:#c4320a;--orange-l:#fff5ed;
+  --shadow:0 1px 4px rgba(15,22,35,.08),0 1px 2px rgba(15,22,35,.05);
+  --shadow-md:0 4px 12px rgba(15,22,35,.1),0 2px 4px rgba(15,22,35,.06);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0b0f1a;--card:#141926;--card2:#1a2030;--border:#252e42;
+    --text:#f0f4ff;--text2:#8892a4;--text3:#4a5568;
+    --blue-l:#0d2352;--green-l:#052b1a;--red-l:#2d0a09;
+    --amber-l:#2d1505;--purple-l:#1a1040;--orange-l:#2d0f05;
+  }
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.app{padding:20px 18px;max-width:1360px;margin:0 auto}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.hdr-logo{font-size:24px;font-weight:600;letter-spacing:-.5px}.hdr-logo span{color:var(--blue)}
+.hdr-sub{font-size:12px;color:var(--text3);margin-top:3px}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);font-size:12px;font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.live{background:var(--green);animation:pulse 2s infinite}
+.dot.off{background:var(--red)}
+.dot.chk{background:var(--text3)}
+.tabs{display:flex;gap:2px;border-bottom:1.5px solid var(--border);margin-bottom:22px;overflow-x:auto}
+.tab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:color .15s}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.on){color:var(--text)}
+.panel{display:none}.panel.on{display:block;animation:fadeIn .2s ease}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;box-shadow:var(--shadow)}
+.sc-lbl{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+.sc-val{font-size:26px;font-weight:600;letter-spacing:-.5px;line-height:1}
+.sc-sub{font-size:12px;color:var(--text2);margin-top:5px}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(295px,1fr));gap:15px;margin-bottom:22px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s,border-color .3s}
+.cc:hover{box-shadow:var(--shadow-md)}
+.cc.long{border-color:var(--green);border-width:1.5px}
+.cc.short{border-color:var(--red);border-width:1.5px}
+.cb{padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:flex-start}
+.cn{font-size:16px;font-weight:600;display:flex;align-items:center;gap:7px}
+.cno{font-size:11px;color:var(--text2);margin-top:3px}
+.vtag{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
+.temps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border)}
+.tc{background:var(--card);padding:13px 8px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.tc.mid{background:var(--card2)}
+.tc-lbl{font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;margin-bottom:5px}
+.tc-val{font-size:26px;font-weight:300;letter-spacing:-.8px;line-height:1}
+.tc-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.tc-diff{font-size:11px;font-weight:500;margin-top:4px;padding:2px 7px;border-radius:20px}
+.bod{padding:14px 18px}
+.ar{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.ar-lbl{font-size:11px;font-weight:500;color:var(--text3);white-space:nowrap;min-width:88px}
+.ar-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.ar-fill{height:100%;border-radius:2px;transition:width .5s}
+.ar-pct{font-size:11px;font-weight:600;min-width:34px;text-align:right}
+.ar-vrd{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.sbox{border-radius:10px;padding:11px 14px;margin-bottom:11px;border:1px solid transparent}
+.sbox.long{background:var(--green-l);border-color:#a7f3d0}
+.sbox.short{background:var(--red-l);border-color:#fca5a5}
+.sbox.neutral{background:var(--card2);border-color:var(--border)}
+.s-type{font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:4px}
+.s-brk{font-size:17px;font-weight:600;margin-bottom:6px}
+.s-meta{display:flex;gap:14px;flex-wrap:wrap}
+.si{font-size:11px;color:var(--text2)}.si b{color:var(--text);font-weight:600}
+.lvls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:11px}
+.lv{border-radius:8px;padding:8px 10px;text-align:center}
+.lv-lbl{font-size:10px;font-weight:600;letter-spacing:.3px;margin-bottom:3px}
+.lv-val{font-size:14px;font-weight:600}
+.mch{height:50px;margin-bottom:5px}
+.cft{display:flex;justify-content:space-between;align-items:center}
+.cft-ts{font-size:11px;color:var(--text3)}
+.kbdg{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.bw{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:var(--shadow)}
+.bh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:9px}
+.bt{font-size:15px;font-weight:600}
+.bst{font-size:12px;color:var(--text3);margin-top:3px}
+.bctrl{display:flex;gap:7px;align-items:center}
+.bctrl select{font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 14px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.ld{width:12px;height:4px;border-radius:2px}
+.csg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.stw{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:15px;box-shadow:var(--shadow)}
+.stw-hdr{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--border)}
+.stw-title{font-size:15px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);background:var(--card2);border-bottom:1px solid var(--border);white-space:nowrap;letter-spacing:.3px}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--card2)}
+.bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px}
+.bdg-l{background:var(--green-l);color:var(--green)}
+.bdg-s{background:var(--red-l);color:var(--red)}
+.bdg-x{background:var(--amber-l);color:var(--amber)}
+.bdg-n{background:var(--card2);color:var(--text3);border:1px solid var(--border)}
+.simw{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:var(--shadow)}
+.sim-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sim-bk{display:flex;align-items:baseline;gap:9px;margin-bottom:6px}
+.sim-amt{font-size:34px;font-weight:300;letter-spacing:-1px}
+.sim-dl{font-size:16px;font-weight:600}
+.sim-sub{font-size:12px;color:var(--text3);margin-bottom:16px}
+.sps{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.sp{border:1px solid var(--border);border-radius:10px;padding:12px 15px;display:grid;grid-template-columns:1fr auto;gap:9px;align-items:start;transition:border-color .3s}
+.sp-city{font-size:11px;color:var(--text3);margin-bottom:3px}
+.sp-brk{font-size:15px;font-weight:600}
+.sp-meta{font-size:11px;color:var(--text2);margin-top:3px}
+.sp-pnl{font-size:16px;font-weight:600;text-align:right}
+.sp-now{font-size:11px;color:var(--text3);text-align:right;margin-bottom:5px}
+.btn{font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit;transition:background .15s}
+.btn:hover{background:var(--card2)}
+.btn-d{color:var(--red);border-color:#fca5a5}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-p:hover{background:var(--blue-d)}
+.sec-t{font-size:13px;font-weight:600;margin-bottom:9px}
+.hist-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.hist-row:last-child{border-bottom:none}
+.gc{display:flex;flex-direction:column;gap:13px}
+.gcd{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.gcd h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:8px}
+.grs{display:flex;flex-direction:column;gap:9px}
+.gr{display:flex;gap:12px;font-size:13px;line-height:1.5}
+.gk{font-weight:600;color:var(--blue);min-width:116px;flex-shrink:0}
+.gv{color:var(--text2)}
+.gnote{font-size:12px;color:var(--text2);background:var(--blue-l);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:10px 14px;margin-top:12px;line-height:1.6;font-family:monospace}
+.frow{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;flex-wrap:wrap;gap:9px}
+.offline-bar{padding:11px 16px;background:var(--red-l);border:1px solid #fca5a5;border-radius:10px;font-size:12px;color:var(--red);margin-bottom:18px;font-family:monospace}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useCallback,useRef}=React;
+const O=window.location.origin,WS=O.replace(/^http/,'ws');
+const CITIES=['NYC','LA','MIA','PHX'];
+const CFG={
+  NYC:{name:'New York',emoji:'🗽',station:'KNYC',note:'Central Park ASOS · watch 6AM/12PM model drops'},
+  LA: {name:'Los Angeles',emoji:'🌴',station:'KLAX',note:'LAX ASOS · most stable market'},
+  MIA:{name:'Miami',emoji:'🌊',station:'KMIA',note:'MIA Airport ASOS · compressed summer range'},
+  PHX:{name:'Phoenix',emoji:'☀️',station:'KPHX',note:'Sky Harbor ASOS · extreme summer heat'},
+};
+const fT=v=>v!=null?Math.round(v)+'°':'—';
+const fC=v=>v!=null?Math.round(v)+'¢':'—';
+const fPp=v=>v!=null?(v*100).toFixed(1)+'pp':'—';
+const fPct=v=>v!=null?(v*100).toFixed(1)+'%':'—';
+const fV=v=>v>=1000?(v/1e3).toFixed(1)+'k':String(v||0);
+const dk=()=>window.matchMedia('(prefers-color-scheme:dark)').matches;
+const aC=a=>a==null?'var(--text3)':a>.75?'var(--green)':a>.5?'var(--amber)':'var(--red)';
+const sC=s=>({BUY_YES:'var(--green)',BUY_NO:'var(--red)',NEUTRAL:'var(--text3)'}[s]||'var(--text3)');
+const sL=s=>({BUY_YES:'▲ BUY YES',BUY_NO:'▼ BUY NO',NEUTRAL:'— Neutral'}[s]||'—');
+const sBg=s=>({BUY_YES:'long',BUY_NO:'short',NEUTRAL:'neutral'}[s]||'neutral');
+const tC=t=>t==null?'var(--text)':t>=105?'var(--orange)':t>=90?'var(--red)':t>=75?'var(--amber)':t>=65?'var(--text)':'var(--blue)';
+
+function linR(ys){const n=ys.length;if(n<2)return{m:0,b:ys[0]||50};const xs=ys.map((_,i)=>i),xm=xs.reduce((a,b)=>a+b)/n,ym=ys.reduce((a,b)=>a+b)/n,num=xs.reduce((s,x,i)=>s+(x-xm)*(ys[i]-ym),0),den=xs.reduce((s,x)=>s+(x-xm)**2,0),m=den>0?num/den:0;return{m,b:ym-m*xm};}
+function rStd(ys,r){const res=ys.map((y,i)=>y-(r.b+r.m*i)),v=res.reduce((s,x)=>s+x*x,0)/Math.max(ys.length-1,1);return Math.sqrt(v);}
+
+function MiniChart({id,history,modelProb,mid}){
+  useEffect(()=>{
+    const el=document.getElementById(id);if(!el)return;
+    const ys=history&&history.length>2?history.map(h=>h.mid):[mid||50,mid||50];
+    const mp=(modelProb||.5)*100;
+    if(el._ch)el._ch.destroy();
+    const tr=ys[ys.length-1]-ys[0],lc=tr>0.3?'#0a9b5e':tr<-0.3?'#d42b24':'#1d6ef5';
+    el._ch=new Chart(el,{type:'line',data:{labels:ys.map((_,i)=>i),datasets:[
+      {data:ys,borderColor:lc,borderWidth:2,pointRadius:0,fill:false,tension:.35},
+      {data:ys.map(()=>mp),borderColor:'#0a9b5e',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false,min:Math.min(...ys,mp)-4,max:Math.max(...ys,mp)+4}},animation:{duration:0}}});
+  },[id,JSON.stringify(history?.slice(-3)),mid]);
+  return <canvas id={id} role="img" aria-label="mini price chart"/>;
+}
+
+function AgreeBar({score}){
+  const p=score!=null?Math.round(score*100):0,col=aC(score);
+  const vrd=score==null?'—':score>.75?'Trade':score>.5?'Reduce':'Sit out';
+  return <div className="ar">
+    <div className="ar-lbl">Model agreement</div>
+    <div className="ar-track"><div className="ar-fill" style={{width:p+'%',background:col}}/></div>
+    <div className="ar-pct" style={{color:col}}>{p}%</div>
+    <div className="ar-vrd" style={{background:col+'18',color:col}}>{vrd}</div>
+  </div>;
+}
+
+function CityCard({city,data,onSim}){
+  const c=CFG[city];
+  if(!data)return <div className="cc"><div className="cb"><span style={{color:'var(--text3)'}}>Loading {city}…</span></div></div>;
+  if(data.error)return <div className="cc"><div className="cb" style={{color:'var(--red)'}}>{c.emoji} {city} — {data.error}</div></div>;
+  const bx=data.brackets||[],best=bx.find(b=>b.label===data.best_label)||bx[0];
+  const sig=best?.signal||'NEUTRAL';
+  const sc=sC(sig),sbg=sBg(sig);
+  const sl=best?Math.max(2,Math.round((best.mid||50)-Math.max((best.spread||3)*1.5,5))):0;
+  const tp=best?Math.round((best.mid||50)+Math.abs(best.edge||.1)*150):0;
+  const exitNow=best&&best.exit_edge>0&&Math.abs(best.edge||0)<=best.exit_edge;
+  const agr=data.agreement,apc=agr!=null?Math.round(agr*100):0,acol=aC(agr);
+  const hi=data.nws_high,lo=data.nws_low,cur=data.metar_f;
+  const diff=cur!=null&&hi!=null?Math.round((cur-hi)*10)/10:null;
+  const vc=data.vol_color||'#888';
+  return <div className={`cc ${sig==='BUY_YES'?'long':sig==='BUY_NO'?'short':''}`}>
+    <div className="cb">
+      <div>
+        <div className="cn">{c.emoji} {c.name}</div>
+        <div className="cno">{c.note}</div>
+      </div>
+      <div className="vtag" style={{background:vc+'1a',color:vc}}>{data.vol_label}</div>
+    </div>
+    <div className="temps">
+      <div className="tc">
+        <div className="tc-lbl">High</div>
+        <div className="tc-val" style={{color:tC(hi)}}>{fT(hi)}</div>
+        <div className="tc-sub">NWS forecast</div>
+      </div>
+      <div className="tc mid">
+        <div className="tc-lbl">Current ASOS</div>
+        <div className="tc-val" style={{color:tC(cur),fontWeight:500}}>{fT(cur)}</div>
+        <div className="tc-sub">{data.metar_age!=null?`${data.metar_age}m ago`:'live'}</div>
+        {diff!=null&&<div className="tc-diff" style={{background:Math.abs(diff)>2?'var(--amber-l)':'var(--card2)',color:Math.abs(diff)>2?'var(--amber)':'var(--text3)'}}>{diff>0?'+':''}{diff}° vs fcst</div>}
+      </div>
+      <div className="tc">
+        <div className="tc-lbl">Low</div>
+        <div className="tc-val" style={{color:'var(--blue)',fontSize:22}}>{fT(lo)}</div>
+        <div className="tc-sub">NWS forecast</div>
+      </div>
+    </div>
+    <div className="bod">
+      <AgreeBar score={agr}/>
+      <div className={`sbox ${sbg}`}>
+        <div className="s-type" style={{color:sc}}>{sL(sig)}{exitNow?' · 🚨 EXIT NOW':''}</div>
+        {best?<div className="s-brk">{best.label}</div>:<div className="s-brk" style={{color:'var(--text3)',fontSize:14}}>No active signal</div>}
+        {best&&sig!=='NEUTRAL'&&<div className="s-meta">
+          <div className="si">Edge <b>{fPp(best.edge)}</b></div>
+          <div className="si">Mkt <b>{fC(best.mid)}</b></div>
+          <div className="si">Kelly <b>{best.kelly>0?(best.kelly*100).toFixed(1)+'%':'—'}</b></div>
+          <div className="si">Vol <b>{fV(best.volume)}</b></div>
+        </div>}
+      </div>
+      {best&&sig!=='NEUTRAL'&&<div className="lvls">
+        <div className="lv" style={{background:'var(--blue-l)'}}><div className="lv-lbl" style={{color:'var(--blue)'}}>Entry</div><div className="lv-val" style={{color:'var(--blue)'}}>{fC(best.mid)}</div></div>
+        <div className="lv" style={{background:'var(--red-l)'}}><div className="lv-lbl" style={{color:'var(--red)'}}>Stop loss</div><div className="lv-val" style={{color:'var(--red)'}}>{sl}¢</div></div>
+        <div className="lv" style={{background:'var(--green-l)'}}><div className="lv-lbl" style={{color:'var(--green)'}}>Take profit</div><div className="lv-val" style={{color:'var(--green)'}}>{tp}¢</div></div>
+      </div>}
+      <div className="mch"><MiniChart id={`mc${city}`} history={best?.history} modelProb={best?.model_prob} mid={best?.mid}/></div>
+      <div className="cft">
+        <div className="cft-ts">{data.ts?new Date(data.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'}</div>
+        <div className="kbdg" style={{background:data.kalshi_live?'var(--green-l)':'var(--card2)',color:data.kalshi_live?'var(--green)':'var(--text3)'}}>{data.kalshi_live?'Kalshi live':'Demo'}</div>
+      </div>
+    </div>
+  </div>;
+}
+
+function DayTimeline({allData}){
+  const [city,setCity]=useState('NYC');
+  const [bracket,setBracket]=useState('');
+  const tlRef=useRef(null);
+  const bxList=(allData[city]?.brackets||[]);
+  const br=bxList.find(b=>b.label===bracket)||bxList[0];
+  const nowH=new Date().getHours();
+  const HLBLS=Array.from({length:24},(_,i)=>i===0?'12am':i<12?i+'am':i===12?'12pm':(i-12)+'pm');
+
+  useEffect(()=>{
+    if(!br)return;
+    const mp=(br.model_prob||.5)*100,mid=br.mid||50;
+    const seed=city+(br.label||'')+(new Date().toDateString());
+    let hs=0;for(let i=0;i<seed.length;i++){hs=(Math.imul(31,hs)+seed.charCodeAt(i))|0;}
+    const rng=()=>{hs=(Math.imul(1664525,hs)+1013904223)|0;return(hs>>>0)/4294967296;};
+    let p=mp+(rng()*16-8);p=Math.max(5,Math.min(95,p));
+    const pastY=new Array(24).fill(null);
+    const futY=new Array(24).fill(null);
+    const ciUp=new Array(24).fill(null);
+    const ciDn=new Array(24).fill(null);
+    for(let h=0;h<=nowH;h++){
+      p+=(mid-p)*0.18+(rng()-.5)*2.4;
+      p=Math.max(5,Math.min(95,p));
+      if(h===nowH)p=mid;
+      pastY[h]=Math.round(p*10)/10;
+    }
+    const pData=pastY.filter(v=>v!=null);
+    const reg=linR(pData),std=Math.max(.5,rStd(pData,reg));
+    futY[nowH]=mid;ciUp[nowH]=mid;ciDn[nowH]=mid;
+    for(let h=nowH+1;h<=23;h++){
+      const steps=h-nowH,grav=steps/(24-nowH);
+      let proj=reg.b+reg.m*(pData.length+steps-1);
+      proj+=(mp-proj)*grav*0.78;
+      proj=Math.max(3,Math.min(97,proj));
+      futY[h]=Math.round(proj*10)/10;
+      const ci=std*1.96*Math.sqrt(steps)*(1-grav*.55);
+      ciUp[h]=Math.min(97,Math.round((proj+ci)*10)/10);
+      ciDn[h]=Math.max(3,Math.round((proj-ci)*10)/10);
+    }
+    const all=[...pData,...futY.filter(v=>v!=null),mp];
+    const yMin=Math.max(0,Math.min(...all)-12),yMax=Math.min(100,Math.max(...all)+12);
+    const isDk=dk(),gc=isDk?'rgba(255,255,255,.05)':'rgba(15,22,35,.04)',tc='#6b7280';
+    const el=document.getElementById('tl-chart');if(!el)return;
+    if(tlRef.current)tlRef.current.destroy();
+    tlRef.current=new Chart(el,{type:'line',data:{labels:HLBLS,datasets:[
+      {label:'Actual price',data:pastY,borderColor:'#1d6ef5',borderWidth:2.5,
+       pointRadius:pastY.map((_,i)=>i===nowH?7:0),
+       pointBackgroundColor:'#fff',pointBorderColor:'#1d6ef5',pointBorderWidth:2,
+       fill:false,tension:.35,spanGaps:false},
+      {label:'Projected path',data:futY,borderColor:'#6940c5',borderWidth:2,
+       borderDash:[8,4],pointRadius:0,fill:false,tension:.35,spanGaps:false},
+      {label:'Model probability',data:new Array(24).fill(mp),borderColor:'#0a9b5e',
+       borderWidth:1.5,borderDash:[4,4],pointRadius:0,fill:false},
+      {label:'+95% CI',data:ciUp,borderColor:'rgba(184,92,10,.22)',borderWidth:.5,
+       borderDash:[2,4],pointRadius:0,fill:'+1',
+       backgroundColor:'rgba(184,92,10,.07)',tension:.35,spanGaps:false},
+      {label:'-95% CI',data:ciDn,borderColor:'rgba(184,92,10,.22)',borderWidth:.5,
+       borderDash:[2,4],pointRadius:0,fill:false,tension:.35,spanGaps:false},
+    ]},options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
+        callbacks:{
+          title:items=>{const i=items[0].dataIndex;return HLBLS[i].toUpperCase()+(i===nowH?' \u2190 NOW':i<nowH?' (past)':' (projected)');},
+          label:ctx=>ctx.parsed.y!=null?ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'\u00a2':null,
+        }
+      }},
+      scales:{
+        x:{ticks:{color:tc,font:{size:10},maxTicksLimit:13},grid:{color:gc}},
+        y:{ticks:{color:tc,font:{size:10},callback:v=>v+'\u00a2'},grid:{color:gc},min:yMin,max:yMax}
+      },animation:{duration:400}}});
+  },[city,bracket,nowH,String(br?.mid)]);
+
+  const sl2=br?Math.max(2,Math.round((br.mid||50)-Math.max((br.spread||3)*1.5,5))):0;
+  const tp2=br?Math.round((br.mid||50)+Math.abs(br.edge||.1)*150):0;
+  const hLeft=23-nowH;
+  const nowLbl=HLBLS[nowH]?.toUpperCase();
+
+  return <div className="bw">
+    <div className="bh">
+      <div>
+        <div className="bt">Daily price timeline &middot; {new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+        <div className="bst">1-hour increments &middot; solid = past actual &middot; dashed = projected &middot; green = model probability &middot; &#9679; now = {nowLbl} &middot; {hLeft}h to settlement</div>
+      </div>
+      <div className="bctrl">
+        <select value={city} onChange={e=>{setCity(e.target.value);setBracket('');}}>
+          {CITIES.map(c=><option key={c}>{c}</option>)}
+        </select>
+        <select value={bracket} onChange={e=>setBracket(e.target.value)}>
+          {bxList.map(b=><option key={b.label}>{b.label}</option>)}
+        </select>
+      </div>
+    </div>
+    <div className="leg">
+      <div className="li"><div className="ld" style={{background:'#1d6ef5'}}/> Actual (past)</div>
+      <div className="li"><div className="ld" style={{background:'#6940c5',opacity:.7}}/> Projected (future)</div>
+      <div className="li"><div className="ld" style={{background:'#0a9b5e'}}/> Model probability</div>
+      <div className="li"><div className="ld" style={{background:'#b85c0a',opacity:.35}}/> 95% confidence band</div>
+      <div className="li" style={{marginLeft:'auto',color:'var(--blue)',fontWeight:600,fontSize:12}}>&#9679; {nowLbl} &middot; {hLeft}h left</div>
+    </div>
+    <div style={{position:'relative',width:'100%',height:280}}>
+      <canvas id="tl-chart" role="img" aria-label="Daily hourly price timeline with projection">Hourly Kalshi YES price from midnight to midnight with future projection.</canvas>
+    </div>
+    {br&&<div className="csg" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
+      <div className="sc"><div className="sc-lbl">Time now</div><div className="sc-val" style={{fontSize:20}}>{nowLbl}</div><div className="sc-sub">{hLeft}h to settlement</div></div>
+      <div className="sc"><div className="sc-lbl">Settlement target</div><div className="sc-val" style={{fontSize:20}}>{fPct(br.model_prob)}</div><div className="sc-sub">model probability</div></div>
+      <div className="sc"><div className="sc-lbl">Price now</div><div className="sc-val" style={{fontSize:20,color:sC(br.signal)}}>{fC(br.mid)}</div><div className="sc-sub">{fPp(br.edge)} edge</div></div>
+      <div className="sc"><div className="sc-lbl">Stop / Target</div><div className="sc-val" style={{fontSize:18}}><span style={{color:'var(--red)'}}>{sl2}&cent;</span><span style={{color:'var(--text3)',fontSize:14}}> / </span><span style={{color:'var(--green)'}}>{tp2}&cent;</span></div><div className="sc-sub">SL / TP</div></div>
+    </div>}
+  </div>;
+}
+
+function ChartTab({allData}){
+  const [city,setCity]=useState('NYC');
+  const [bracket,setBracket]=useState('');
+  const pcRef=useRef(null),pvRef=useRef(null);
+  const bxList=(allData[city]?.brackets||[]);
+  const br=bxList.find(b=>b.label===bracket)||bxList[0];
+  useEffect(()=>{
+    if(!br)return;
+    const ys=br.history&&br.history.length>2?br.history.map(h=>h.mid):Array.from({length:20},(_,i)=>{let p=br.mid||50;for(let j=0;j<i;j++)p+=(Math.random()-.5)*1.5;return Math.max(2,Math.min(98,p));});
+    const mp=(br.model_prob||.5)*100,reg=linR(ys),std=Math.max(.5,rStd(ys,reg)),nf=8;
+    const fy=Array.from({length:nf},(_,i)=>Math.max(1,Math.min(99,reg.b+reg.m*(ys.length+i))));
+    const al=ys.map((_,i)=>i).concat(Array.from({length:nf},(_,i)=>ys.length+i));
+    const isDk=dk(),gc=isDk?'rgba(255,255,255,.05)':'rgba(15,22,35,.04)',tc='#6b7280';
+    if(pcRef.current)pcRef.current.destroy();
+    pcRef.current=new Chart(document.getElementById('pc'),{type:'line',data:{labels:al,datasets:[
+      {label:'Live price',data:[...ys,...new Array(nf).fill(null)],borderColor:'#1d6ef5',borderWidth:2.5,pointRadius:0,fill:false,tension:.3},
+      {label:'Model prob',data:new Array(al.length).fill(mp),borderColor:'#0a9b5e',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+      {label:'Predicted',data:[...new Array(ys.length-1).fill(null),ys[ys.length-1],...fy],borderColor:'#6940c5',borderWidth:2,borderDash:[4,3],pointRadius:0,fill:false,tension:.2},
+      {label:'+CI',data:[...new Array(ys.length-1).fill(null),ys[ys.length-1],...fy.map(v=>v+std*1.96)],borderColor:'rgba(184,92,10,.25)',borderWidth:.5,borderDash:[1,4],pointRadius:0,fill:'+1',backgroundColor:'rgba(184,92,10,.07)',tension:.2},
+      {label:'-CI',data:[...new Array(ys.length-1).fill(null),ys[ys.length-1],...fy.map(v=>v-std*1.96)],borderColor:'rgba(184,92,10,.25)',borderWidth:.5,borderDash:[1,4],pointRadius:0,fill:false,tension:.2},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>ctx.parsed.y!=null?ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'¢':null}}},scales:{x:{ticks:{color:tc,font:{size:10},maxTicksLimit:10,callback:(_,i)=>i<ys.length?`T-${ys.length-i}`:`+${i-ys.length+1}`},grid:{color:gc}},y:{ticks:{color:tc,font:{size:10},callback:v=>v+'¢'},grid:{color:gc},min:Math.max(0,Math.min(...ys,...fy)-14),max:Math.min(100,Math.max(...ys,...fy)+14)}},animation:{duration:300}}});
+    const zs=ys.map(v=>std>0?Math.round((v-mp)/std*100)/100:0);
+    if(pvRef.current)pvRef.current.destroy();
+    pvRef.current=new Chart(document.getElementById('pvc'),{type:'bar',data:{labels:ys.map((_,i)=>`T-${ys.length-i}`),datasets:[{data:zs,backgroundColor:zs.map(v=>Math.abs(v)>1.96?(v>0?'rgba(212,43,36,.55)':'rgba(10,155,94,.55)'):'rgba(29,110,245,.3)'),borderColor:zs.map(v=>Math.abs(v)>1.96?(v>0?'#d42b24':'#0a9b5e'):'#1d6ef5'),borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:10}},grid:{color:gc},min:Math.min(-2.5,...zs)-.5,max:Math.max(2.5,...zs)+.5}},animation:{duration:200}}});
+    const sl=Math.max(2,Math.round((br.mid||50)-Math.max((br.spread||3)*1.5,5))),tp=Math.round((br.mid||50)+Math.abs(br.edge||.1)*150);
+    const el=document.getElementById('cst');
+    if(el)el.innerHTML=`<div class="sc"><div class="sc-lbl">Current price</div><div class="sc-val" style="font-size:18px">${fC(br.mid)}</div><div class="sc-sub">yes mid</div></div><div class="sc"><div class="sc-lbl">Model probability</div><div class="sc-val" style="font-size:18px">${fPct(br.model_prob)}</div><div class="sc-sub">${fPp(br.edge)} edge</div></div><div class="sc"><div class="sc-lbl">Predicted ~3 min</div><div class="sc-val" style="font-size:18px">${Math.round(fy[5]||0)}¢</div><div class="sc-sub">${reg.m>0.1?'▲ Rising':reg.m<-0.1?'▼ Falling':'→ Flat'}</div></div><div class="sc"><div class="sc-lbl">Volatility σ</div><div class="sc-val" style="font-size:18px">${std.toFixed(1)}¢</div><div class="sc-sub">SL ${sl}¢ · TP ${tp}¢</div></div>`;
+  },[city,bracket,JSON.stringify(br?.history?.slice(-2))]);
+  return <div>
+    <div className="bw">
+      <div className="bh">
+        <div><div className="bt">Price movement · model vs market · short-term prediction</div><div className="bst">Live Kalshi bid/ask vs model probability with linear regression forecast and 95% confidence band</div></div>
+        <div className="bctrl">
+          <select value={city} onChange={e=>{setCity(e.target.value);setBracket('');}}>
+            {CITIES.map(c=><option key={c}>{c}</option>)}
+          </select>
+          <select value={bracket} onChange={e=>setBracket(e.target.value)}>
+            {bxList.map(b=><option key={b.label}>{b.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="leg">
+        <div className="li"><div className="ld" style={{background:'#1d6ef5'}}/> Live price</div>
+        <div className="li"><div className="ld" style={{background:'#0a9b5e'}}/> Model probability</div>
+        <div className="li"><div className="ld" style={{background:'#6940c5',opacity:.7}}/> Predicted path</div>
+        <div className="li"><div className="ld" style={{background:'#b85c0a',opacity:.35}}/> 95% CI band</div>
+      </div>
+      <div style={{position:'relative',width:'100%',height:250}}><canvas id="pc" role="img" aria-label="Price prediction chart"/></div>
+      <div className="csg" id="cst"/>
+    </div>
+    <div className="bw">
+      <div className="bh"><div><div className="bt">P-value · statistical significance of mispricing</div><div className="bst">Z-score = (market price − model price) ÷ σ. |Z| &gt; 1.96 → statistically significant edge (p &lt; 0.05). Red = market overpriced, green = underpriced.</div></div></div>
+      <div style={{position:'relative',width:'100%',height:145}}><canvas id="pvc" role="img" aria-label="Z-score chart"/></div>
+    </div>
+  </div>;
+}
+
+function SignalTab({allData,onSim}){
+  const [flt,setFlt]=useState('all');
+  const rows=[];
+  CITIES.forEach(city=>{
+    if(flt!=='all'&&flt!==city)return;
+    const d=allData[city]||{};
+    (d.brackets||[]).forEach(b=>{
+      if(!b||b.signal==='NEUTRAL')return;
+      const sl=Math.max(2,Math.round((b.mid||50)-Math.max((b.spread||3)*1.5,5)));
+      const tp=Math.round((b.mid||50)+Math.abs(b.edge||.1)*150);
+      const rsk=(b.mid||50)-sl,rwd=tp-(b.mid||50);
+      const exitNow=b.exit_edge>0&&Math.abs(b.edge||0)<=b.exit_edge;
+      rows.push({city,b,sl,tp,rr:rsk>0?(rwd/rsk).toFixed(1)+'x':'—',exitNow,agree:d.agreement,d});
+    });
+  });
+  return <div>
+    <div className="frow">
+      <div style={{fontSize:15,fontWeight:600}}>All signals · entry / stop loss / take profit</div>
+      <select value={flt} onChange={e=>setFlt(e.target.value)} style={{fontSize:12,padding:'6px 10px',borderRadius:8,border:'1px solid var(--border)',background:'var(--card)',color:'var(--text)',cursor:'pointer',fontFamily:'inherit'}}>
+        <option value="all">All cities</option>
+        {CITIES.map(c=><option key={c}>{c}</option>)}
+      </select>
+    </div>
+    <div className="stw">
+      <table>
+        <thead><tr><th>City</th><th>Bracket</th><th>Signal</th><th>High/Low/ASOS</th><th>Entry</th><th>Stop loss</th><th>Take profit</th><th>R:R</th><th>Edge</th><th>Kelly</th><th>Agree</th><th></th></tr></thead>
+        <tbody>
+          {rows.length===0
+            ?<tr><td colSpan={12} style={{textAlign:'center',color:'var(--text3)',padding:24}}>No active signals. Signals appear when edge exceeds spread and model agreement exceeds 50%.</td></tr>
+            :rows.map(({city,b,sl,tp,rr,exitNow,agree,d})=><tr key={city+b.label}>
+              <td><b>{CFG[city].emoji} {city}</b></td>
+              <td style={{fontWeight:600}}>{b.label}</td>
+              <td><span className={'bdg '+(b.signal==='BUY_YES'?'bdg-l':'bdg-s')}>{b.signal==='BUY_YES'?'▲ BUY YES':'▼ BUY NO'}</span>{exitNow&&<> <span className="bdg bdg-x">🚨 Exit</span></>}</td>
+              <td style={{fontFamily:'monospace',fontSize:11}}><span style={{color:'var(--red)'}}>{fT(d.nws_high)}</span><span style={{color:'var(--text3)'}}>/</span><span style={{color:'var(--blue)'}}>{fT(d.nws_low)}</span><span style={{color:'var(--text3)'}}>/</span><span style={{color:'var(--amber)'}}>{fT(d.metar_f)}</span></td>
+              <td>{fC(b.mid)}</td>
+              <td style={{color:'var(--red)',fontWeight:600}}>{sl}¢</td>
+              <td style={{color:'var(--green)',fontWeight:600}}>{tp}¢</td>
+              <td style={{fontWeight:600}}>{rr}</td>
+              <td style={{color:b.edge>0?'var(--green)':'var(--red)'}}>{fPp(b.edge)}</td>
+              <td style={{color:'var(--blue)'}}>{b.kelly>0?(b.kelly*100).toFixed(1)+'%':'—'}</td>
+              <td>{agree!=null?Math.round(agree*100)+'%':'—'}</td>
+              <td><button className="btn" onClick={()=>onSim(city,b.label,b.mid||50,sl,tp,b.kelly||.03)}>Simulate ↗</button></td>
+            </tr>)
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
+function SimTab({bank,start,positions,history,onClose,onReset}){
+  const pnl=bank-start;
+  return <div className="simw">
+    <div className="sim-top"><div style={{fontSize:15,fontWeight:600}}>Paper trading simulator</div><button className="btn" onClick={onReset}>Reset</button></div>
+    <div className="sim-bk"><div className="sim-amt">${bank.toFixed(2)}</div><div className="sim-dl" style={{color:pnl>=0?'var(--green)':'var(--red)'}}>{pnl>=0?'+':''}${pnl.toFixed(2)}</div></div>
+    <div className="sim-sub">Virtual bankroll · Kelly sizing · auto-closes at SL/TP</div>
+    <div className="sec-t">Open positions</div>
+    <div className="sps">
+      {positions.length===0
+        ?<div style={{fontSize:13,color:'var(--text3)',padding:'10px 0'}}>No open positions. Go to Signal feed and click Simulate ↗</div>
+        :positions.map(p=>{
+          const pnl2=(p.curr-p.entry)*p.contracts/100,pc=pnl2>=0?'var(--green)':'var(--red)';
+          const nsl=p.curr<=p.sl+2,ntp=p.curr>=p.tp-2;
+          return <div key={p.id} className="sp" style={{borderColor:nsl?'#fca5a5':ntp?'#a7f3d0':'var(--border)'}}>
+            <div><div className="sp-city">{CFG[p.city]?.emoji} {p.city}</div><div className="sp-brk">{p.bracket}</div><div className="sp-meta">Entry {p.entry}¢ · {p.contracts} contracts · SL {p.sl}¢ · TP {p.tp}¢</div>{nsl&&<div style={{fontSize:11,color:'var(--red)',marginTop:3,fontWeight:600}}>⚠ Near stop loss</div>}{ntp&&<div style={{fontSize:11,color:'var(--green)',marginTop:3,fontWeight:600}}>🎯 Near take profit</div>}</div>
+            <div><div className="sp-now">Now {p.curr}¢</div><div className="sp-pnl" style={{color:pc}}>{pnl2>=0?'+':''}${Math.abs(pnl2).toFixed(2)}</div><button className="btn btn-d" style={{marginTop:8}} onClick={()=>onClose(p.id,p.curr)}>Close</button></div>
+          </div>;
+        })
+      }
+    </div>
+    <div className="sec-t">Trade history</div>
+    <div>{history.length===0?<div style={{fontSize:13,color:'var(--text3)'}}>No closed trades yet.</div>:history.slice().reverse().map(h=><div key={h.id} className="hist-row"><span style={{color:'var(--text2)'}}>{h.city} {h.bracket}</span><span style={{color:h.pnl>=0?'var(--green)':'var(--red)',fontWeight:600}}>{h.pnl>=0?'Win':'Loss'} · {h.pnl>=0?'+':''}${Math.abs(h.pnl).toFixed(2)}</span></div>)}</div>
+  </div>;
+}
+
+function GuideTab(){
+  const sections=[
+    {title:'What every number means',icon:'📊',rows:[
+      ['High / Low / ASOS','The three core temps: NWS forecast high (Kalshi settles on this), NWS forecast low, and live ASOS reading from the exact station Kalshi uses.'],
+      ['Blended forecast','60% bias-corrected NWS + 40% GFS ensemble. The number the probability model is built around.'],
+      ['NWS adjusted','weather.gov forecast corrected for each city\'s systematic error vs its ASOS settlement station.'],
+      ['GFS ensemble','31 model runs averaged. More reliable than one single run. Updates every 6 hours.'],
+      ['METAR live','Real-time ASOS temperature. Watch the gap vs forecast — 3°+ off means tail brackets will reprice.'],
+      ['Model agreement','How much GFS and NWS agree. Only trade above 75%. Below 50% — sit out.'],
+      ['Edge','Your model probability minus the market\'s implied probability. Only trade when edge exceeds the spread.'],
+      ['Kelly %','Optimal bet size as % of your weather trading bankroll. Never bet more than this number.'],
+      ['Stop loss','Entry − 1.5× spread. Set before entering. This fixes the holding too long problem.'],
+      ['Take profit','Entry + edge × 1.5. When hit, exit — the market has caught up to your model.'],
+      ['Z-score','Statistical significance. |Z| > 1.96 = p < 0.05 — the edge is real, not noise.'],
+      ['Daily timeline','Shows where the YES price has been all day and where it is projected to go by settlement.'],
+    ]},
+    {title:'Best trade windows',icon:'⏰',rows:[
+      ['6 AM ET','06Z GFS model drops. Market slowest to reprice — biggest edges in first 15 minutes.'],
+      ['12 PM ET','12Z GFS run. Second best window. Check model agreement before entering.'],
+      ['6 PM ET','18Z run. Good for confirming direction heading into settlement.'],
+      ['Intraday METAR','Watch current ASOS vs blended forecast. 3°+ gap means market is mis-anchored.'],
+    ],note:'Your holding problem: the 🚨 EXIT signal fires when edge compresses to 40% of entry edge. That is your sell trigger. Set your stop loss before you enter.'},
+    {title:'NWS bias corrections',icon:'📍',rows:[
+      ['Miami −3.0°F','NWS overshoots MIA Airport ASOS. Most retail traders don\'t know this.'],
+      ['NYC −1.0°F','NWS overshoots Central Park ASOS by ~1°F. Matters for mid-range brackets.'],
+      ['LA ±0.0°F','Well calibrated. No correction. This is why LA is the easiest market.'],
+      ['Phoenix +1.5°F','Urban heat island makes NWS underestimate Sky Harbor. Tails often underpriced.'],
+    ]},
+    {title:'Teaching the model',icon:'🧠',rows:[
+      ['After settlement','Log every outcome. Model adjusts confidence per city automatically.'],
+      ['Syntax','curl -X POST https://your-railway-url/api/settle/NYC/80-84°/WIN'],
+      ['After 20 trades','Accuracy badge on each city card shows real calibration data.'],
+    ],note:'Replace your-railway-url with your actual Railway deployment URL.'},
+  ];
+  return <div className="gc">
+    {sections.map(s=><div key={s.title} className="gcd">
+      <h3>{s.icon} {s.title}</h3>
+      <div className="grs">{s.rows.map(([k,v])=><div key={k} className="gr"><div className="gk">{k}</div><div className="gv">{v}</div></div>)}</div>
+      {s.note&&<div className="gnote">{s.note}</div>}
+    </div>)}
+  </div>;
+}
+
+function App(){
+  const [tab,setTab]=useState('overview');
+  const [AD,setAD]=useState({});
+  const [online,setOnline]=useState(null);
+  const [ts,setTs]=useState('');
+  const [bank,setBank]=useState(1000);
+  const START=1000;
+  const [positions,setPositions]=useState([]);
+  const [history,setHistory]=useState([]);
+  const wsRefs=useRef({});
+
+  const fetchAll=useCallback(async()=>{
+    try{
+      const r=await fetch(`${O}/api/all`);
+      if(r.ok){setAD(await r.json());setOnline(true);}
+    }catch(e){setOnline(false);}
+    setTs(new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  },[]);
+
+  useEffect(()=>{
+    fetch(`${O}/health`).then(r=>{setOnline(r.ok);if(r.ok)fetchAll();}).catch(()=>setOnline(false));
+  },[fetchAll]);
+
+  useEffect(()=>{const t=setInterval(fetchAll,15000);return()=>clearInterval(t);},[fetchAll]);
+
+  useEffect(()=>{
+    if(!online)return;
+    CITIES.forEach(key=>{
+      try{
+        const s=new WebSocket(`${WS}/ws/${key}`);
+        s.onmessage=e=>{const d=JSON.parse(e.data);setAD(p=>({...p,[key]:d}));setTs(new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));};
+        wsRefs.current[key]=s;
+      }catch(e){}
+    });
+    return()=>Object.values(wsRefs.current).forEach(s=>{try{s.close();}catch(e){}});
+  },[online]);
+
+  useEffect(()=>{const t=setInterval(()=>setTs(new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})),1000);return()=>clearInterval(t);},[]);
+
+  useEffect(()=>{
+    setPositions(prev=>{
+      const keep=[];
+      prev.forEach(p=>{
+        const d=AD[p.city];const b=d?.brackets?.find(br=>br.label===p.bracket);
+        const curr=b?.mid||p.curr;p.curr=curr;
+        if(curr<=p.sl||curr>=p.tp){
+          const pnl=(curr-p.entry)*p.contracts/100;
+          setBank(bk=>bk+pnl);
+          setHistory(h=>[...h,{id:Date.now(),city:p.city,bracket:p.bracket,pnl}]);
+        }else keep.push(p);
+      });
+      return keep;
+    });
+  },[AD]);
+
+  const handleSim=(city,bracket,entry,sl,tp,kf)=>{
+    setTab('simulation');
+    const contracts=Math.round(bank*kf/entry*100);
+    if(contracts<=0||positions.find(p=>p.city===city&&p.bracket===bracket))return;
+    setPositions(p=>[...p,{id:Date.now(),city,bracket,entry,sl,tp,contracts,curr:entry}]);
+  };
+
+  const handleClose=(id,curr)=>{
+    const p=positions.find(x=>x.id===id);if(!p)return;
+    const pnl=(curr-p.entry)*p.contracts/100;
+    setBank(b=>b+pnl);
+    setHistory(h=>[...h,{id:Date.now(),city:p.city,bracket:p.bracket,pnl}]);
+    setPositions(ps=>ps.filter(x=>x.id!==id));
+  };
+
+  const nsig=CITIES.reduce((n,c)=>{return n+((AD[c]?.brackets||[]).some(b=>b.signal!=='NEUTRAL')?1:0);},0);
+  const allE=CITIES.flatMap(c=>(AD[c]?.brackets||[]).filter(b=>b.signal!=='NEUTRAL').map(b=>({e:Math.abs(b.edge||0),c})));
+  const topE=allE.sort((a,b)=>b.e-a.e)[0];
+  const avgAgr=CITIES.reduce((s,c)=>s+(AD[c]?.agreement||0),0)/CITIES.length;
+  const simPnl=bank-START;
+
+  const TABS=[['overview','🌡 Overview'],['charts','📈 Charts'],['timeline','📅 Daily timeline'],['signals','🎯 Signals'],['simulation','🧮 Simulation'],['guide','📖 Guide']];
+
+  return <div className="app">
+    <div className="hdr">
+      <div>
+        <div className="hdr-logo">Temp<span>Edge</span> Pro</div>
+        <div className="hdr-sub">Kalshi weather scalp · NYC · LA · Miami · Phoenix · weather.gov · GFS 31-member ensemble · METAR live</div>
+      </div>
+      <div className="hdr-right">
+        <div className="pill">
+          <div className={`dot ${online===true?'live':online===false?'off':'chk'}`}/>
+          <span style={{color:online===true?'var(--green)':online===false?'var(--red)':'var(--text3)'}}>{online===true?'Connected':online===false?'Offline':'Checking'}</span>
+        </div>
+        <div className="pill">{ts||'—'}</div>
+      </div>
+    </div>
+
+    <div className="tabs">
+      {TABS.map(([id,lbl])=><button key={id} className={`tab ${tab===id?'on':''}`} onClick={()=>setTab(id)}>{lbl}</button>)}
+    </div>
+
+    <div id="t-overview" className={`panel ${tab==='overview'?'on':''}`}>
+      <div className="sg">
+        <div className="sc"><div className="sc-lbl">Active signals</div><div className="sc-val">{nsig}</div><div className="sc-sub">across 4 markets</div></div>
+        <div className="sc"><div className="sc-lbl">Best edge</div><div className="sc-val">{topE?fPp(topE.e):'—'}</div><div className="sc-sub">{topE?.c||'—'}</div></div>
+        <div className="sc"><div className="sc-lbl">Model agreement</div><div className="sc-val">{Math.round(avgAgr*100)}%</div><div className="sc-sub">GFS vs NWS</div></div>
+        <div className="sc"><div className="sc-lbl">Sim P&L</div><div className="sc-val" style={{color:simPnl>=0?'var(--green)':'var(--red)'}}>{simPnl>=0?'+':''}${simPnl.toFixed(0)}</div><div className="sc-sub">from $1,000</div></div>
+      </div>
+      {online===false&&<div className="offline-bar">⚠ Backend offline — check your Railway deployment at railway.app</div>}
+      <div className="cg">{CITIES.map(c=><CityCard key={c} city={c} data={AD[c]} onSim={handleSim}/>)}</div>
+    </div>
+
+    <div id="t-charts" className={`panel ${tab==='charts'?'on':''}`}><ChartTab allData={AD}/></div>
+    <div id="t-timeline" className={`panel ${tab==='timeline'?'on':''}`}><DayTimeline allData={AD}/></div>
+    <div id="t-signals" className={`panel ${tab==='signals'?'on':''}`}><SignalTab allData={AD} onSim={handleSim}/></div>
+    <div id="t-simulation" className={`panel ${tab==='simulation'?'on':''}`}><SimTab bank={bank} start={START} positions={positions} history={history} onClose={handleClose} onReset={()=>{setBank(1000);setPositions([]);setHistory([]);}}/></div>
+    <div id="t-guide" className={`panel ${tab==='guide'?'on':''}`}><GuideTab/></div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
